@@ -5,6 +5,7 @@
 #include "ml307_ssl_transport.h"
 #include "audio_codec.h"
 #include "mqtt_protocol.h"
+#include "idiom_protocol.h"
 #include "websocket_protocol.h"
 #include "font_awesome_symbols.h"
 #include "iot/thing_manager.h"
@@ -364,6 +365,7 @@ void Application::Start() {
     protocol_ = std::make_unique<WebsocketProtocol>();
 #else
     protocol_ = std::make_unique<MqttProtocol>();
+    idiom_protocol_ = std::make_unique<IdiomProtocol>();
 #endif
     protocol_->OnNetworkError([this](const std::string& message) {
         SetDeviceState(kDeviceStateIdle);
@@ -455,6 +457,7 @@ void Application::Start() {
         }
     });
     protocol_->Start();
+    idiom_protocol_->Start();
 
     // Check for new firmware version or get the MQTT broker address
     ota_.SetCheckVersionUrl(CONFIG_OTA_VERSION_URL);

@@ -71,6 +71,14 @@ public:
     void PlaySound(const std::string_view& sound);
     bool CanEnterSleepMode();
 
+     Protocol* GetIdiomMqttProtocol() {
+         return idiom_protocol_.get();
+     }
+
+     Protocol* GetMqttProtocol() {
+        return protocol_.get();
+    }
+
 private:
     Application();
     ~Application();
@@ -85,6 +93,7 @@ private:
     std::mutex mutex_;
     std::list<std::function<void()>> main_tasks_;
     std::unique_ptr<Protocol> protocol_;
+    std::unique_ptr<Protocol> idiom_protocol_;    
     EventGroupHandle_t event_group_ = nullptr;
     esp_timer_handle_t clock_timer_handle_ = nullptr;
     volatile DeviceState device_state_ = kDeviceStateUnknown;

@@ -124,6 +124,7 @@ list(APPEND SOURCES ${BOARD_SOURCES})
 
 if(CONFIG_CONNECTION_TYPE_MQTT_UDP)
     list(APPEND SOURCES "protocols/mqtt_protocol.cc")
+    list(APPEND SOURCES "protocols/idiom_protocol.cc")
 elseif(CONFIG_CONNECTION_TYPE_WEBSOCKET)
     list(APPEND SOURCES "protocols/websocket_protocol.cc")
 endif()

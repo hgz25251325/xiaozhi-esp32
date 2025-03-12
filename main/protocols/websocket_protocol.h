@@ -26,6 +26,7 @@ private:
     WebSocket* websocket_ = nullptr;
 
     void ParseServerHello(const cJSON* root);
+public:
     void SendText(const std::string& text) override;
 };
 
