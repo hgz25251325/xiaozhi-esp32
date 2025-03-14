@@ -18,6 +18,8 @@
 #include "ota.h"
 #include "background_task.h"
 
+#include "camera.h"
+
 #if CONFIG_USE_WAKE_WORD_DETECT
 #include "wake_word_detect.h"
 #endif
@@ -79,6 +81,7 @@ public:
         return protocol_.get();
     }
 
+    Camera* GetCamera() { return camera_.get(); }
 private:
     Application();
     ~Application();
@@ -110,6 +113,8 @@ private:
     std::unique_ptr<OpusEncoderWrapper> opus_encoder_;
     std::unique_ptr<OpusDecoderWrapper> opus_decoder_;
 
+    std::unique_ptr<Camera> camera_;
+
     int opus_decode_sample_rate_ = -1;
     OpusResampler input_resampler_;
     OpusResampler reference_resampler_;
@@ -123,6 +128,8 @@ private:
     void CheckNewVersion();
     void ShowActivationCode();
     void OnClockTimer();
+    esp_err_t StartCameraWebServer();
+    //static esp_err_t CaptureHandler(httpd_req_t *req, void *context);
 };
 
 #endif // _APPLICATION_H_

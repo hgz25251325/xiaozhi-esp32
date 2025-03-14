@@ -367,6 +367,7 @@ void Application::Start() {
 #else
     protocol_ = std::make_unique<MqttProtocol>();
     idiom_protocol_ = std::make_unique<IdiomProtocol>();
+    camera_ = std::make_unique<Camera>();
 #endif
     protocol_->OnNetworkError([this](const std::string& message) {
         SetDeviceState(kDeviceStateIdle);
@@ -461,6 +462,21 @@ void Application::Start() {
     });
     protocol_->Start();
     idiom_protocol_->Start();
+    esp_err_t ret = camera_->init();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Camera init failed");
+        return;
+    }
+    ESP_LOGI(TAG, "Camera and Webserver initialized successfully");
+
+    // Start webserver
+    ret = StartCameraWebServer();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Webserver start failed");
+        return;
+    }
+
+    
 
     // Check for new firmware version or get the MQTT broker address
     ota_.SetCheckVersionUrl(CONFIG_OTA_VERSION_URL);
@@ -837,4 +853,42 @@ bool Application::CanEnterSleepMode() {
 
     // Now it is safe to enter sleep mode
     return true;
+}
+
+// 定义一个静态成员函数作为回调函数
+static esp_err_t CaptureHandler(httpd_req_t *req) {
+    Application *app = static_cast<Application *>(req->user_ctx);
+    if (!app || !app->GetCamera()) {
+        ESP_LOGE(TAG, "Application or Camera instance is null");
+        return ESP_FAIL;
+    }
+    if (app->GetCamera()->jpg_httpd_handler(req) == ESP_OK) {
+        return ESP_OK;
+    }
+
+    return ESP_FAIL;
+}
+
+esp_err_t Application::StartCameraWebServer() {
+    httpd_handle_t server = NULL;
+    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+
+    // Start the httpd server
+    esp_err_t ret = httpd_start(&server, &config);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Error starting server! err=%s",esp_err_to_name(ret));
+        return ret;
+    }
+
+    // Register URI handlers
+    httpd_uri_t capture_uri = {
+        .uri       = "/capture",
+        .method    = HTTP_GET,
+        .handler   = CaptureHandler, // 使用静态成员函数
+        .user_ctx  = this
+    };
+
+    httpd_register_uri_handler(server, &capture_uri);
+
+    return ESP_OK;
 }
